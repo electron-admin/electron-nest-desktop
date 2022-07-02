@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "author": "",
   "private": true,
-  	"description": "electron+nestjs+sequelize+sqlit3开发的桌面应用程序",
-	"keywords": [
-		"electron",
-		"nestjs",
-		"sqlit3"
-	],
+  "description": "electron+nestjs+sequelize+sqlite3开发的桌面应用程序",
+  "keywords": [
+    "electron",
+    "nestjs",
+    "sqlite3"
+  ],
   "main": "electron/main.js",
   "license": "MIT",
   "scripts": {
@@ -31,6 +31,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "build": {
+    "productName": "electron-vite-vue",
+    "copyright": "Copyright © 2022 武汉跃码教育科技有限公司",
     "directories": {
       "output": "build-electron"
     },

@@ -2,26 +2,37 @@
 /*
  * @Author: 寒云 <1355081829@qq.com>
  * @Date: 2022-06-12 18:01:26
- * @LastEditTime: 2022-06-18 09:17:16
+ * @LastEditTime: 2022-07-02 14:07:06
  * @LastEditors: 寒云
  * @Description:
- * @FilePath: \nest-admin\electron\main.js
+ * @FilePath: \electron-nest-desktop\electron\main.js
  * @QQ: 大前端QQ交流群: 976961880
  * @QQ3: 大前端QQ交流群3: 473246571
  * @公众账号: 乐编码
  * 惑而不从师，其为惑也，终不解矣
  * Copyright (c) 2022 by 最爱白菜吖, All Rights Reserved.
  */
-const { app, BrowserWindow, Tray, Menu, shell } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  screen,
+  Tray,
+  Menu,
+  shell,
+  dialog,
+  nativeImage,
+} = require('electron');
 const path = require('path');
 const isMac = process.platform === 'darwin';
 require(path.resolve(__dirname, '../dist/main.js'));
 
 const isDev = process.env.NODE_ENV === 'development';
+let mainWindow;
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+  mainWindow = new BrowserWindow({
+    // Electron获取屏幕工作窗口尺寸
+    width: screen.getPrimaryDisplay().workAreaSize.width,
+    height: screen.getPrimaryDisplay().workAreaSize.height,
     icon: path.resolve(__dirname, 'favicon_256.ico'),
     webPreferences: {
       nodeIntegration: true,
@@ -29,6 +40,32 @@ function createWindow() {
     },
   });
 
+  mainWindow.on('close', (e) => {
+    if (app.quitting) {
+      e.preventDefault();
+      console.log(1111);
+      dialog
+        .showMessageBox(mainWindow, {
+          type: 'info',
+          title: '退出' + app.name,
+          defaultId: 0,
+          cancelId: 1,
+          message: '确定要退出吗？',
+          buttons: ['退出', '取消'],
+        })
+        .then((r) => {
+          if (r.response === 0) {
+            e.preventDefault(); //阻止默认行为，一定要有
+            mainWindow = null;
+            app.exit(); //exit()直接关闭客户端，不会执行quit();
+          }
+        });
+      app.quitting = false;
+    } else {
+      e.preventDefault();
+      mainWindow.hide();
+    }
+  });
   // electron 拦截所有页面跳转
   // mainWindow.webContents.on('will-navigate', (e, url) => {
   //   e.preventDefault();
@@ -75,16 +112,83 @@ app.whenReady().then(() => {
   createWindow();
 
   // 托盘图标
-  const tray = new Tray(path.resolve(__dirname, 'favicon_256.ico'));
+  const icon = nativeImage.createFromPath(
+    path.resolve(__dirname, 'favicon_256.ico'),
+  );
+  const tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Item1', type: 'radio' },
-    { label: 'Item2', type: 'radio' },
-    { label: 'Item3', type: 'radio', checked: true },
-    { label: 'Item4', type: 'radio' },
+    {
+      label: '仓库地址',
+      type: 'normal',
+      click: async () => {
+        await shell.openExternal(
+          'https://github.com/electron-admin/electron-vite-vue',
+        );
+      },
+    },
+    {
+      label: 'QQ交流1群',
+      type: 'normal',
+      click: async () => {
+        await shell.openExternal(
+          'http://qm.qq.com/cgi-bin/qm/qr?k=J_cuD735wsluYuqT62WIf5OCLS7qRh1W&jump_from=webapi',
+        );
+      },
+    },
+    {
+      label: 'QQ交流3群',
+      type: 'normal',
+      click: async () => {
+        await shell.openExternal(
+          'https://qm.qq.com/cgi-bin/qm/qr?k=cf5oBj3Tl9TsJ3Mk-ILzVJYi-F7tBEvI&jump_from=webapi',
+        );
+      },
+    },
+    {
+      label: '显示',
+      click: () => {
+        mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      },
+    },
+    {
+      role: 'minimize',
+      label: '最小化',
+      click: () => {
+        mainWindow.minimize();
+      },
+    },
+    {
+      role: 'hide',
+      label: '隐藏',
+      click: () => {
+        mainWindow.hide();
+      },
+    },
+    {
+      role: 'togglefullscreen',
+      label: '全屏',
+      click: () => {
+        mainWindow.setFullScreen(mainWindow.isFullScreen() !== true);
+      },
+    },
+    {
+      label: '退出',
+      click: () => {
+        app.quitting = true;
+        app.quit();
+      },
+    },
   ]);
-  tray.setToolTip('最爱白菜吖');
+  tray.setToolTip('electron-nest-desktop\n武汉跃码教育科技有限公司');
   tray.setContextMenu(contextMenu);
-
+  tray.on('right-click', () => {
+    tray.popUpContextMenu(contextMenu);
+  });
+  tray.on('click', () => {
+    mainWindow.show();
+  });
   // 菜单
   const template = [
     // { role: 'appMenu' }
